@@ -1,0 +1,233 @@
+# 略号・慣用名・日本語名 -> OPSIN が読める名前。列: 別名(| 区切り)<TAB>名前<TAB>分子式(検査用)
+# 自分用の追加は user_dict.tsv へ(こちらは配布物として触らない)
+# --- 溶媒
+DMF|N,N-ジメチルホルムアミド|ジメチルホルムアミド	N,N-dimethylformamide	C3H7NO
+DMAc|DMA|N,N-ジメチルアセトアミド|ジメチルアセトアミド	N,N-dimethylacetamide	C4H9NO
+DMSO|ジメチルスルホキシド	(methanesulfinyl)methane	C2H6OS
+THF|テトラヒドロフラン	oxolane	C4H8O
+2-MeTHF|2-メチルテトラヒドロフラン	2-methyloxolane	C5H10O
+DCM|ジクロロメタン|塩化メチレン	dichloromethane	CH2Cl2
+DCE|1,2-ジクロロエタン	1,2-dichloroethane	C2H4Cl2
+MeCN|ACN|アセトニトリル	acetonitrile	C2H3N
+MeOH|メタノール	methanol	CH4O
+EtOH|エタノール	ethanol	C2H6O
+IPA|iPrOH|i-PrOH|2-プロパノール|イソプロパノール|イソプロピルアルコール	propan-2-ol	C3H8O
+1-プロパノール|n-PrOH	propan-1-ol	C3H8O
+n-BuOH|1-ブタノール	butan-1-ol	C4H10O
+t-BuOH|tBuOH|tert-ブタノール	2-methylpropan-2-ol	C4H10O
+EtOAc|AcOEt|酢酸エチル	ethyl acetate	C4H8O2
+AcOH|HOAc|酢酸	acetic acid	C2H4O2
+Et2O|ジエチルエーテル|エーテル	ethoxyethane	C4H10O
+MTBE|TBME|tert-ブチルメチルエーテル	2-methoxy-2-methylpropane	C5H12O
+DME|1,2-ジメトキシエタン	1,2-dimethoxyethane	C4H10O2
+NMP|N-メチルピロリドン|N-メチル-2-ピロリドン	1-methylpyrrolidin-2-one	C5H9NO
+HMPA|ヘキサメチルリン酸トリアミド	N-[bis(dimethylamino)phosphoryl]-N-methylmethanamine	C6H18N3OP
+TFE|2,2,2-トリフルオロエタノール	2,2,2-trifluoroethanol	C2H3F3O
+HFIP|ヘキサフルオロイソプロパノール	1,1,1,3,3,3-hexafluoropropan-2-ol	C3H2F6O
+クロロホルム|CHCl3	trichloromethane	CHCl3
+四塩化炭素|CCl4	tetrachloromethane	CCl4
+DMI|1,3-ジメチル-2-イミダゾリジノン	1,3-dimethylimidazolidin-2-one	C5H10N2O
+DMPU	1,3-dimethyl-1,3-diazinan-2-one	C6H12N2O
+トルエン|PhMe	methylbenzene	C7H8
+ベンゼン	benzene	C6H6
+ヘキサン|n-ヘキサン	hexane	C6H14
+ヘプタン	heptane	C7H16
+ペンタン	pentane	C5H12
+シクロヘキサン	cyclohexane	C6H12
+ピリジン|Py	pyridine	C5H5N
+ジオキサン|1,4-ジオキサン	1,4-dioxane	C4H8O2
+アセトン	propan-2-one	C3H6O
+MEK|メチルエチルケトン|2-ブタノン	butan-2-one	C4H8O
+NMM|N-メチルモルホリン	4-methylmorpholine	C5H11NO
+水	oxidane	H2O
+エチレングリコール	ethane-1,2-diol	C2H6O2
+グリセリン|グリセロール	propane-1,2,3-triol	C3H8O3
+ニトロメタン	nitromethane	CH3NO2
+クロロベンゼン	chlorobenzene	C6H5Cl
+o-ジクロロベンゼン|ODCB	1,2-dichlorobenzene	C6H4Cl2
+キシレン|o-キシレン	1,2-dimethylbenzene	C8H10
+p-キシレン	1,4-dimethylbenzene	C8H10
+メシチレン	1,3,5-trimethylbenzene	C9H12
+アニソール	methoxybenzene	C7H8O
+二硫化炭素|CS2	methanedithione	CS2
+# --- 塩基・カップリング・試薬
+TEA|Et3N|トリエチルアミン	N,N-diethylethanamine	C6H15N
+DIPEA|DIEA|iPr2NEt|Hunig's base|ジイソプロピルエチルアミン	N-ethyl-N-(propan-2-yl)propan-2-amine	C8H19N
+DBU|ジアザビシクロウンデセン	2,3,4,6,7,8,9,10-octahydropyrimido[1,2-a]azepine	C9H16N2
+DBN	2,3,4,6,7,8-hexahydropyrrolo[1,2-a]pyrimidine	C7H12N2
+DABCO	1,4-diazabicyclo[2.2.2]octane	C6H12N2
+DMAP|4-ジメチルアミノピリジン	N,N-dimethylpyridin-4-amine	C7H10N2
+TMEDA|テトラメチルエチレンジアミン	N,N,N',N'-tetramethylethane-1,2-diamine	C6H16N2
+LDA|リチウムジイソプロピルアミド	lithium di(propan-2-yl)azanide	C6H14LiN
+LiHMDS|LHMDS	lithium bis(trimethylsilyl)azanide	C6H18LiNSi2
+NaHMDS	sodium bis(trimethylsilyl)azanide	C6H18NNaSi2
+KHMDS	potassium bis(trimethylsilyl)azanide	C6H18KNSi2
+n-BuLi|nBuLi|BuLi|ブチルリチウム	butyllithium	C4H9Li
+t-BuOK|tBuOK|KOtBu|カリウムtert-ブトキシド	potassium 2-methylpropan-2-olate	C4H9KO
+NaOMe|ナトリウムメトキシド	sodium methanolate	CH3NaO
+NaOEt|ナトリウムエトキシド	sodium ethanolate	C2H5NaO
+DCC|ジシクロヘキシルカルボジイミド	N,N'-dicyclohexylmethanediimine	C13H22N2
+DIC|ジイソプロピルカルボジイミド	N,N'-di(propan-2-yl)methanediimine	C7H14N2
+EDC|EDCI|WSC	3-[(ethylimino)methylideneamino]-N,N-dimethylpropan-1-amine	C8H17N3
+EDC·HCl|EDC.HCl|EDCI·HCl|WSC·HCl	3-[(ethylimino)methylideneamino]-N,N-dimethylpropan-1-amine hydrochloride	C8H18ClN3
+HOBt	1H-benzotriazol-1-ol	C6H5N3O
+HOAt	3H-[1,2,3]triazolo[4,5-b]pyridin-3-ol	C5H4N4O
+NHS|HOSu|N-ヒドロキシスクシンイミド	1-hydroxypyrrolidine-2,5-dione	C4H5NO3
+CDI|カルボニルジイミダゾール	di(imidazol-1-yl)methanone	C7H6N4O
+TFA|トリフルオロ酢酸	2,2,2-trifluoroacetic acid	C2HF3O2
+TFAA|無水トリフルオロ酢酸	trifluoroacetic anhydride	C4F6O3
+Ac2O|無水酢酸	acetic anhydride	C4H6O3
+Boc2O|(Boc)2O|ジ-tert-ブチルジカルボナート|二炭酸ジ-tert-ブチル	di-tert-butyl dicarbonate	C10H18O5
+TsCl|塩化トシル|p-トルエンスルホニルクロリド	4-methylbenzenesulfonyl chloride	C7H7ClO2S
+MsCl|塩化メシル|メタンスルホニルクロリド	methanesulfonyl chloride	CH3ClO2S
+TsOH|pTsOH|p-TsOH|PTSA|pTSA|p-トルエンスルホン酸	4-methylbenzenesulfonic acid	C7H8O3S
+CSA|カンファースルホン酸	(7,7-dimethyl-2-oxobicyclo[2.2.1]heptan-1-yl)methanesulfonic acid	C10H16O4S
+TfOH|トリフルオロメタンスルホン酸	trifluoromethanesulfonic acid	CHF3O3S
+Tf2O|無水トリフルオロメタンスルホン酸	trifluoromethanesulfonic anhydride	C2F6O5S2
+NBS|N-ブロモスクシンイミド	1-bromopyrrolidine-2,5-dione	C4H4BrNO2
+NCS|N-クロロスクシンイミド	1-chloropyrrolidine-2,5-dione	C4H4ClNO2
+NIS|N-ヨードスクシンイミド	1-iodopyrrolidine-2,5-dione	C4H4INO2
+mCPBA|m-CPBA|MCPBA	3-chlorobenzenecarboperoxoic acid	C7H5ClO3
+DDQ	4,5-dichloro-3,6-dioxocyclohexa-1,4-diene-1,2-dicarbonitrile	C8Cl2N2O2
+AIBN	2,2'-diazenediylbis(2-methylpropanenitrile)	C8H12N4
+DEAD	diethyl diazene-1,2-dicarboxylate	C6H10N2O4
+DIAD	dipropan-2-yl diazene-1,2-dicarboxylate	C8H14N2O4
+PPh3|トリフェニルホスフィン	triphenylphosphane	C18H15P
+TPPO|Ph3PO|トリフェニルホスフィンオキシド	triphenylphosphine oxide	C18H15OP
+DPPA	diphenyl phosphorazidate	C12H10N3O3P
+TMSCl|TMS-Cl|クロロトリメチルシラン	chloro(trimethyl)silane	C3H9ClSi
+TBSCl|TBDMSCl|TBS-Cl	tert-butyl(chloro)dimethylsilane	C6H15ClSi
+TBAF|フッ化テトラブチルアンモニウム	tetrabutylammonium fluoride	C16H36FN
+TBAB|臭化テトラブチルアンモニウム	tetrabutylammonium bromide	C16H36BrN
+LAH|LiAlH4|水素化アルミニウムリチウム	lithium aluminium hydride	H4AlLi
+NaBH4|水素化ホウ素ナトリウム	sodium borohydride	H4BNa
+DIBAL|DIBAL-H|DIBALH	diisobutylaluminium hydride	C8H19Al
+9-BBN	9-borabicyclo[3.3.1]nonane	C8H15B
+Fmoc-Cl|FmocCl	(9H-fluoren-9-yl)methyl carbonochloridate	C15H11ClO2
+Cbz-Cl|CbzCl|Z-Cl	benzyl carbonochloridate	C8H7ClO2
+塩化チオニル|SOCl2	thionyl chloride	Cl2OS
+塩化オキサリル|(COCl)2	oxalyl chloride	C2Cl2O2
+塩化アセチル|AcCl	acetyl chloride	C2H3ClO
+塩化ベンゾイル|BzCl	benzoyl chloride	C7H5ClO
+TMS|テトラメチルシラン	tetramethylsilane	C4H12Si
+18-crown-6|18-クラウン-6	1,4,7,10,13,16-hexaoxacyclooctadecane	C12H24O6
+15-crown-5|15-クラウン-5	1,4,7,10,13-pentaoxacyclopentadecane	C10H20O5
+BHT|ジブチルヒドロキシトルエン	2,6-di-tert-butyl-4-methylphenol	C15H24O
+EDTA|エチレンジアミン四酢酸	2,2',2'',2'''-(ethane-1,2-diyldinitrilo)tetraacetic acid	C10H16N2O8
+Tris|トリス	2-amino-2-(hydroxymethyl)propane-1,3-diol	C4H11NO3
+HEPES	2-[4-(2-hydroxyethyl)piperazin-1-yl]ethanesulfonic acid	C8H18N2O4S
+MES	2-(morpholin-4-yl)ethanesulfonic acid	C6H13NO4S
+SDS|ドデシル硫酸ナトリウム	sodium dodecyl sulfate	C12H25NaO4S
+CTAB|臭化セチルトリメチルアンモニウム	hexadecyl(trimethyl)azanium bromide	C19H42BrN
+# --- 無機・ごく基本
+塩酸|塩化水素|HCl	hydrogen chloride	HCl
+臭化水素|HBr	hydrogen bromide	HBr
+硫酸|H2SO4	sulfuric acid	H2O4S
+硝酸|HNO3	nitric acid	HNO3
+リン酸|H3PO4	phosphoric acid	H3O4P
+水酸化ナトリウム|NaOH	sodium hydroxide	HNaO
+水酸化カリウム|KOH	potassium hydroxide	HKO
+水酸化リチウム|LiOH	lithium hydroxide	HLiO
+炭酸ナトリウム|Na2CO3	disodium carbonate	CNa2O3
+炭酸水素ナトリウム|重曹|NaHCO3	sodium hydrogen carbonate	CHNaO3
+炭酸カリウム|K2CO3	dipotassium carbonate	CK2O3
+炭酸セシウム|Cs2CO3	dicaesium carbonate	CCs2O3
+塩化ナトリウム|NaCl	sodium chloride	ClNa
+硫酸ナトリウム|Na2SO4	disodium sulfate	Na2O4S
+硫酸マグネシウム|MgSO4	magnesium sulfate	MgO4S
+塩化アンモニウム|NH4Cl	ammonium chloride	H4ClN
+アンモニア|NH3	azane	H3N
+ヒドラジン	hydrazine	H4N2
+ヒドロキシルアミン	hydroxylamine	H3NO
+過酸化水素|H2O2	hydrogen peroxide	H2O2
+水素化ナトリウム|NaH	sodium hydride	HNa
+# --- 有機化合物(日本語名・慣用名)
+安息香酸	benzoic acid	C7H6O2
+ギ酸	formic acid	CH2O2
+プロピオン酸	propanoic acid	C3H6O2
+酪酸	butanoic acid	C4H8O2
+シュウ酸	oxalic acid	C2H2O4
+マロン酸	propanedioic acid	C3H4O4
+コハク酸	butanedioic acid	C4H6O4
+グルタル酸	pentanedioic acid	C5H8O4
+アジピン酸	hexanedioic acid	C6H10O4
+セバシン酸	decanedioic acid	C10H18O4
+マレイン酸	(2Z)-but-2-enedioic acid	C4H4O4
+フマル酸	(2E)-but-2-enedioic acid	C4H4O4
+フタル酸	benzene-1,2-dicarboxylic acid	C8H6O4
+イソフタル酸	benzene-1,3-dicarboxylic acid	C8H6O4
+テレフタル酸	benzene-1,4-dicarboxylic acid	C8H6O4
+トリメシン酸	benzene-1,3,5-tricarboxylic acid	C9H6O6
+クエン酸	2-hydroxypropane-1,2,3-tricarboxylic acid	C6H8O7
+乳酸	2-hydroxypropanoic acid	C3H6O3
+酒石酸|L-酒石酸	(2R,3R)-2,3-dihydroxybutanedioic acid	C4H6O6
+サリチル酸	2-hydroxybenzoic acid	C7H6O3
+桂皮酸|ケイ皮酸	(2E)-3-phenylprop-2-enoic acid	C9H8O2
+ラウリン酸	dodecanoic acid	C12H24O2
+ミリスチン酸	tetradecanoic acid	C14H28O2
+パルミチン酸	hexadecanoic acid	C16H32O2
+ステアリン酸	octadecanoic acid	C18H36O2
+オレイン酸	(9Z)-octadec-9-enoic acid	C18H34O2
+リノール酸	(9Z,12Z)-octadeca-9,12-dienoic acid	C18H32O2
+フェノール	phenol	C6H6O
+アニリン	aniline	C6H7N
+ベンジルアミン	phenylmethanamine	C7H9N
+ベンジルアルコール	phenylmethanol	C7H8O
+ベンズアルデヒド	benzaldehyde	C7H6O
+ホルムアルデヒド	formaldehyde	CH2O
+アセトアルデヒド	acetaldehyde	C2H4O
+アセトフェノン	1-phenylethan-1-one	C8H8O
+ベンゾフェノン	diphenylmethanone	C13H10O
+ナフタレン	naphthalene	C10H8
+アントラセン	anthracene	C14H10
+フェナントレン	phenanthrene	C14H10
+ピレン	pyrene	C16H10
+ペリレン	perylene	C20H12
+ビフェニル	1,1'-biphenyl	C12H10
+尿素	urea	CH4N2O
+チオ尿素	thiourea	CH4N2S
+エチレンジアミン	ethane-1,2-diamine	C2H8N2
+ドデカノール|ラウリルアルコール	dodecan-1-ol	C12H26O
+イミダゾール	1H-imidazole	C3H4N2
+ピロール	1H-pyrrole	C4H5N
+インドール	1H-indole	C8H7N
+キノリン	quinoline	C9H7N
+モルホリン	morpholine	C4H9NO
+ピペリジン	piperidine	C5H11N
+ピペラジン	piperazine	C4H10N2
+フルオレン	9H-fluorene	C13H10
+カルバゾール	9H-carbazole	C12H9N
+アゾベンゼン	(E)-diphenyldiazene	C12H10N2
+スチルベン|trans-スチルベン	(E)-1,2-diphenylethene	C14H12
+スチレン	ethenylbenzene	C8H8
+グリシン	glycine	C2H5NO2
+アラニン|L-アラニン	L-alanine	C3H7NO2
+バリン|L-バリン	L-valine	C5H11NO2
+ロイシン|L-ロイシン	L-leucine	C6H13NO2
+イソロイシン|L-イソロイシン	L-isoleucine	C6H13NO2
+フェニルアラニン|L-フェニルアラニン	L-phenylalanine	C9H11NO2
+チロシン|L-チロシン	L-tyrosine	C9H11NO3
+トリプトファン|L-トリプトファン	L-tryptophan	C11H12N2O2
+セリン|L-セリン	L-serine	C3H7NO3
+トレオニン|スレオニン|L-トレオニン	L-threonine	C4H9NO3
+システイン|L-システイン	L-cysteine	C3H7NO2S
+メチオニン|L-メチオニン	L-methionine	C5H11NO2S
+プロリン|L-プロリン	L-proline	C5H9NO2
+アスパラギン酸|L-アスパラギン酸	L-aspartic acid	C4H7NO4
+グルタミン酸|L-グルタミン酸	L-glutamic acid	C5H9NO4
+アスパラギン|L-アスパラギン	L-asparagine	C4H8N2O3
+グルタミン|L-グルタミン	L-glutamine	C5H10N2O3
+リシン|リジン|L-リシン	L-lysine	C6H14N2O2
+アルギニン|L-アルギニン	L-arginine	C6H14N4O2
+ヒスチジン|L-ヒスチジン	L-histidine	C6H9N3O2
+グルコース|D-グルコース|ブドウ糖	D-glucopyranose	C6H12O6
+コレステロール|cholesterol	cholest-5-en-3beta-ol	C27H46O
+# --- 医薬品・天然物(OPSIN が読まない慣用名)
+aspirin|アスピリン|アセチルサリチル酸	2-acetyloxybenzoic acid	C9H8O4
+paracetamol|acetaminophen|アセトアミノフェン	N-(4-hydroxyphenyl)acetamide	C8H9NO2
+ibuprofen|イブプロフェン	2-[4-(2-methylpropyl)phenyl]propanoic acid	C13H18O2
+caffeine|カフェイン	1,3,7-trimethyl-3,7-dihydro-1H-purine-2,6-dione	C8H10N4O2
+nicotine|ニコチン	3-[(2S)-1-methylpyrrolidin-2-yl]pyridine	C10H14N2
+vanillin|バニリン	4-hydroxy-3-methoxybenzaldehyde	C8H8O3
+menthol|メントール|L-メントール	(1R,2S,5R)-5-methyl-2-(propan-2-yl)cyclohexan-1-ol	C10H20O
+camphor|樟脳|カンファー	1,7,7-trimethylbicyclo[2.2.1]heptan-2-one	C10H16O

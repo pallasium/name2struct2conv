@@ -1,0 +1,12 @@
+# setup_assets.py が取ってくるもの(再配布しない)
+models/
+lib/*.jar
+lib/*.part
+# 自分用の辞書・出力
+user_dict.tsv
+*_out.csv
+*_out.xlsx
+*_out.sdf
+__pycache__/
+.pytest_cache/
+.venv/

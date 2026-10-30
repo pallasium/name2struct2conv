@@ -1,0 +1,7 @@
+rdkit>=2024.3
+torch>=2.0
+transformers==4.48.2
+safetensors
+huggingface_hub
+openpyxl
+pytest
