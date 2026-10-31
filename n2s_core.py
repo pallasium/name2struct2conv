@@ -29,6 +29,10 @@ from rdkit import Chem, RDLogger
 from rdkit.Chem import Descriptors, rdMolDescriptors
 
 import n2s_opsin as opsin
+import n2s_assemble as assemble
+import n2s_hydro as hydro
+import n2s_pin as pin
+import n2s_pin2 as pin2
 import n2s_stereo as stereo
 
 RDLogger.DisableLog("rdApp.*")
@@ -54,10 +58,14 @@ class Result:
     aliases: list = field(default_factory=list)      # 辞書にある略号・慣用名
     locants: dict = field(default_factory=dict)      # 原子番号 -> IUPAC の位置番号
     message: str = ""
+    confidence: str = ""           # rule(PIN の規則で組んだ) / model(モデルの名前そのまま) / non-pin(PIN でない可能性)
+    rules: list = field(default_factory=list)        # 適用した規則の ID(n2s_pin2.RULES / G00…、assemble:*、hydro)
+    pool: list = field(default_factory=list)         # 選ぶときの候補と特徴(評価・選び方の調整用。row() には出さない)
 
     def row(self) -> dict:
         d = {"input": self.query, "direction": self.direction, "iupac_name": self.name,
-             "check": self.level, "aliases": " / ".join(self.aliases), "message": self.message}
+             "check": self.level, "pin": self.confidence, "rules": " ".join(self.rules),
+             "aliases": " / ".join(self.aliases), "message": self.message}
         d.update(self.info)
         return d
 
@@ -73,6 +81,17 @@ def flat_key(mol) -> str:
     m = Chem.Mol(mol)
     Chem.RemoveStereochemistry(m)
     return inchikey(m)
+
+
+def fixedh_key(mol) -> str:
+    """互変異性体(動く水素の位置)まで区別する InChIKey。作れなければ空。"""
+    if mol is None:
+        return ""
+    try:
+        inchi = Chem.MolToInchi(mol, options="/FixedH")
+        return Chem.InchiToInchiKey(inchi) or "" if inchi else ""
+    except Exception:
+        return ""
 
 
 def mol_info(mol: Chem.Mol) -> dict:
@@ -277,6 +296,8 @@ class _Translator:
         else:
             self.device = torch.device("cpu")
             torch.set_num_threads(os.cpu_count() or 1)
+        if os.environ.get("N2S_THREADS"):   # 評価を並列で回すとき、プロセスごとのスレッド数を絞る(run_eval_par.py)
+            torch.set_num_threads(int(os.environ["N2S_THREADS"]))
         self.model = model.eval().to(self.device)
         self.enc_vocab = enc_vocab
         self.src_tok = PreTrainedTokenizerFast.from_pretrained(MODELS / src)
@@ -317,7 +338,7 @@ def translator(name: str) -> _Translator:
         if name not in _translators:
             d = MODELS / name
             if not d.exists():
-                raise RuntimeError(f"モデル {d} がありません。setup_assets.py を実行してください。")
+                raise RuntimeError(f"モデル {d} がありません。setup_models.py を実行してください。")
             _translators[name] = _Translator(d, *_TOKENIZERS[name])
         return _translators[name]
 
@@ -543,7 +564,7 @@ def _ml_guess(text: str) -> list[Chem.Mol]:
 _UNUSUAL = re.compile(
     r"oxidanyl|azanyl|(?:brom|chlor|fluor|iod)anyl|cyclohexa-?[\d,]*-?trien"
     r"|\b(?:eth|meth)ano(?:ic|ate)|ethanamide|benzenecarbo|lambda\d|oxido\(oxo\)|hydroxy\(oxo\)")
-_RANK = {"一致": 0, "立体以外一致": 1, "別の構造": 2, "OPSIN で読めない": 3}
+_RANK = {"一致": 0, "互変異性体違い": 1, "立体以外一致": 2, "別の構造": 3, "OPSIN で読めない": 4}
 
 # 単原子イオンなど、モデルに頼らない名前
 _IONS = {"[Na+]": "sodium", "[K+]": "potassium", "[Li+]": "lithium", "[Cs+]": "caesium", "[Rb+]": "rubidium",
@@ -566,14 +587,17 @@ def _kekule(mol: Chem.Mol, stereo_: bool, seed: int | None = None) -> str:
     return Chem.MolToSmiles(m, isomericSmiles=stereo_, kekuleSmiles=True, canonical=seed is None)
 
 
-def _judge(names: list[str], key: str, fkey: str) -> list[tuple[str, str]]:
+def _judge(names: list[str], key: str, fkey: str, mol: Chem.Mol | None = None) -> list[tuple[str, str]]:
     out = []
+    hkey = fixedh_key(mol) if mol is not None else ""
     for c, r in zip(names, opsin.parse(names)):
         bm = r.mol
         if bm is None:
             out.append((c, "OPSIN で読めない"))
         elif inchikey(bm) == key:
-            out.append((c, "一致"))
+            # 標準 InChI は動く水素を同一視するので、FixedH で互変異性体の違いを見る
+            bk = fixedh_key(bm) if hkey else ""
+            out.append((c, "互変異性体違い" if hkey and bk and bk != hkey else "一致"))
         elif flat_key(bm) == fkey:
             out.append((c, "立体以外一致"))
         else:
@@ -613,11 +637,11 @@ def _name_single(mol: Chem.Mol, beams: int) -> tuple[list[tuple[str, str]], dict
     known = dictionary().names_for(key)   # 辞書の英語名(安息香酸 -> benzoic acid など)
     for k in known:
         score[k] = 0.0
-    judged = _judge(known + run(None), key, fkey)
+    judged = _judge(known + run(None), key, fkey, mol)
     if not any(lv == "一致" for _, lv in judged):
         for i in range(6):  # SMILES の書き方(原子の順番)を変えて再挑戦。後半はビームを広げる
-            judged += _judge(run(i + 1, beams if i < 3 else beams * 2), key, fkey)
-            if any(lv in ("一致", "立体以外一致") for _, lv in judged):
+            judged += _judge(run(i + 1, beams if i < 3 else beams * 2), key, fkey, mol)
+            if any(lv in ("一致", "互変異性体違い", "立体以外一致") for _, lv in judged):
                 break
 
     # 骨格が合う候補に立体を付け直す(位置番号つき -> だめなら位置番号なしの総当たり)
@@ -627,8 +651,9 @@ def _name_single(mol: Chem.Mol, beams: int) -> tuple[list[tuple[str, str]], dict
             fixed = stereo.assign(c, mol) or stereo.brute(c, mol)
             if fixed:
                 score[fixed] = score[c]
-                judged.append((fixed, "一致"))
-                break
+                judged += _judge([fixed], key, fkey, mol)
+                if judged[-1][1] == "一致":
+                    break
     return judged, score
 
 
@@ -686,6 +711,73 @@ def _tidy_verified(cands: list[tuple[str, str]], key: str) -> list[tuple[str, st
     return [(ok.get(c, c), lv) for c, lv in cands]
 
 
+_part_cache: dict[str, tuple] = {}
+
+
+def _name_part(m: Chem.Mol) -> tuple[list[tuple[str, str]], dict[str, float]]:
+    """部品(エステルの酸・アルコール側など)の名前。メチル・フェニルのような同じ部品は、一括変換で何度も出るので覚えておく(ビーム 4)。"""
+    k = Chem.MolToSmiles(m)
+    if k not in _part_cache:
+        if len(_part_cache) >= 2000:
+            _part_cache.clear()
+        _part_cache[k] = _name_single(m, 4)
+    judged, score = _part_cache[k]
+    return list(judged), dict(score)
+
+
+def _pinify(cands: list[tuple[str, str]], mol: Chem.Mol, key: str) -> tuple[list[tuple[str, str]], dict]:
+    """一致した上位候補を PIN の書き方に書き換え(n2s_pin)、OPSIN で互変異性体まで同じ構造に戻るものだけを採り、
+    PIN らしさ(pin_penalty)が最小のものを先頭にする。同点なら元の順。"""
+    tops = [c for c, lv in cands[:8] if lv == "一致"]
+    meta = {"confidence": "", "rules": []}
+    if not tops:
+        return cands, meta
+    try:
+        hkey = fixedh_key(mol)
+        po = pin.parent_checker(lambda xs: [r.mol is not None for r in opsin.parse(xs, lenient=True)])
+        parts, extra = [], []
+        if mol.GetNumAtoms() < 80 and len(Chem.GetMolFrags(mol)) == 1:   # 部分に分けて名付け、組み立てる(エステル・リンの酸のエステル)
+            def part_names(m):
+                judged, score = _name_part(m)
+                return [n for n, lv in _order(judged, score) if lv == "一致"]
+            parts = assemble.ester_names(mol, part_names) + assemble.phosphorus_names(mol, part_names)
+            extra = assemble.amide_names(mol, part_names) + assemble.urea_names(mol, part_names)   # 実績が浅いので最優先にはしない
+        tries = list(dict.fromkeys(v for c in parts + tops + extra for v in [c] + pin2.rewrites(c, po)))
+        ok = [v for v, r in zip(tries, opsin.parse(tries))
+              if r.mol is not None and inchikey(r.mol) == key and (not hkey or fixedh_key(r.mol) in ("", hkey))]
+        seeds = list(dict.fromkeys(ok[:2] + tops[:2]))   # 書き換え後・元の上位に、構造から決めた hydro / 指示水素を付ける
+        hv = list(dict.fromkeys(v for sd in seeds for v in hydro.hydro_names(sd, mol, po)))
+        hok = [v for v, r in zip(hv, opsin.parse(hv))
+               if r.mol is not None and inchikey(r.mol) == key and (not hkey or fixedh_key(r.mol) in ("", hkey))] if hv else []
+        built = [v for v in ok if v in parts or any(v in pin2.rewrites(p, po) for p in parts)]
+        pool = list(dict.fromkeys(built + hok + tops + ok))   # extra 由来の名前は ok に入る(照合を通ったときだけ)
+        flat_tops = {pin._flat(t) for t in tops}   # 括弧の種類だけが違う書き換えは優先しない
+        meta["pool"] = [{"name": x, "pen": pin.pin_penalty(x, po), "src": ("built" if x in built else "") + ("hydro" if x in hok else "")
+                         + ("top" if x in tops else "") + ("rw" if (x in ok and x not in tops) else ""),
+                         "rank": tops.index(x) if x in tops else -1, "lv": list(pin.locant_vector(x)),
+                         "flat": pin._flat(x) in flat_tops, "lam": "λ" in x} for x in pool]
+        cands_ = built or pool
+        if built and min(pin.pin_penalty(x, po) for x in built) > min(pin.pin_penalty(x, po) for x in pool):
+            cands_ = pool     # 組み立てた名前より PIN らしい(penalty の小さい)名前があれば、そちらも選べるようにする
+        best = min(cands_, key=lambda x: (pin.pin_penalty(x, po), 0 if ((x in ok or x in hok) and x not in tops and 'λ' not in x
+                                                                     and pin._flat(x) not in flat_tops) else 1,
+                                          pin.locant_vector(x), pool.index(x)))
+        penalty = pin.pin_penalty(best, po)
+        if best in built:
+            meta["rules"].append("assemble")
+        if best in hok:
+            meta["rules"].append("hydro")
+        if best not in tops:
+            meta["rules"] += pin2.applied_rules(tops[0], best, po)
+        meta["confidence"] = "non-pin" if penalty else ("rule" if meta["rules"] else "model")
+    except Exception as e:
+        meta["confidence"], meta["error"] = "", f"{type(e).__name__}: {e}"   # 理由を残す(握りつぶさない)
+        return cands, meta
+    if best == cands[0][0]:
+        return cands, meta
+    return [(best, "一致")] + [(c, lv) for c, lv in cands if c != best], meta
+
+
 def _style(name: str) -> int:
     return len(_UNUSUAL.findall(name))
 
@@ -722,14 +814,20 @@ def smiles_to_name(smiles, beams: int = 8) -> Result:
 
     tidied = list(dict.fromkeys(_tidy_verified(ordered, key)))
     ordered = sorted(tidied, key=lambda x: (_RANK[x[1]], _style(x[0])))  # 整えた後に並べ直す(元の順は保つ)
+    if ordered[0][1] == "一致":
+        ordered, meta = _pinify(ordered, mol, key)
+        res.confidence, res.rules = meta["confidence"], list(dict.fromkeys(meta["rules"]))
+        res.pool = meta.get("pool", [])
     best, level = ordered[0]
     res.candidates = ordered[:30]
-    res.ok = level in ("一致", "立体以外一致")
+    res.ok = level in ("一致", "互変異性体違い", "立体以外一致")
     res.name, res.level = best, (level if res.ok else "未検証")
     if level == "一致":
         res.message = "OPSIN で構造に戻して InChIKey が完全一致。"
         if _has_unassigned_stereo(mol):
             res.message += " 入力に立体の指定が無い立体中心があります(名前にも立体記号なし)。"
+    elif level == "互変異性体違い":
+        res.message = "OPSIN で戻る構造は標準 InChI では同じですが、動く水素の位置(互変異性体)が入力と違います。指示水素・dihydro を確認してください。"
     elif level == "立体以外一致":
         res.message = "骨格・置換位置は一致、立体記号(R/S・E/Z)を合わせられませんでした。名前の立体は自分で付けてください。"
     else:
@@ -738,6 +836,8 @@ def smiles_to_name(smiles, beams: int = 8) -> Result:
             res.message += " 分子が大きく、翻訳モデルの得意な長さを超えています。"
     if res.ok:
         res.locants = locants_for(best, mol)
+    if res.ok and res.confidence == "non-pin":
+        res.message += " PIN の書き方になっていない可能性があります(括弧・並び順・位置番号などを確認)。"
     return res
 
 
@@ -819,11 +919,17 @@ def _name_mixture(frags, beams, key):
 
 # ================================================================ 自動判定の入口
 
-def convert(text: str, to: str = "auto") -> Result:
-    """to: auto / name(構造→名前) / struct(名前→構造)"""
+def convert(text: str, to: str = "auto", name_it: bool = True) -> Result:
+    """to: auto / name(構造→名前) / struct(名前→構造)。name_it=False なら、構造を入れたときの IUPAC 名の計算(数秒〜十数秒)を省く。"""
     raw, text = text, text.strip()
     if to in ("auto", "name"):
         kind, mol = parse_structure(raw)
+        if mol is not None and not name_it:
+            r = Result(text, "構造→名前", ok=True, mol=mol, level="名前なし",
+                       message="IUPAC 名は計算していません(「構造 → 名前を計算する」を入れるか、「この構造に名前を付け直す」で付けられます)。")
+            r.info = mol_info(mol)
+            r.aliases = dictionary().aliases_for(r.info["inchikey"])
+            return r
         if mol is not None:
             r = smiles_to_name(mol)
             r.query = text

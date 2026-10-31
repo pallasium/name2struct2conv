@@ -10,3 +10,6 @@ user_dict.tsv
 __pycache__/
 .pytest_cache/
 .venv/
+
+# MassBank・学習結果(再配布しない。使う人が自分で作る)
+data/

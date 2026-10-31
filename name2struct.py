@@ -23,9 +23,10 @@ for _s in (sys.stdout, sys.stderr):
         _s.reconfigure(encoding="utf-8")
 
 import n2s_core as core
+import n2s_ms as ms
 
-FIELDS = ["input", "direction", "iupac_name", "check", "smiles", "inchi", "inchikey", "formula", "mw",
-          "exact_mass", "aliases", "message"]
+FIELDS = ["input", "direction", "iupac_name", "check", "pin", "rules", "smiles", "formula", "mw",
+          "exact_mass", "elemental_analysis", "ms", "aliases", "message"]
 
 
 # ---------------------------------------------------------------- 一括変換
@@ -56,9 +57,23 @@ def convert_item(item, to: str) -> core.Result:
     return core.convert(item, to)
 
 
+def _with_ms(r: core.Result) -> dict:
+    """行に 元素分析(計算値 %)と マススペクトル(計算値の主なピーク)を足す。InChI は出さない。"""
+    row = r.row()
+    row.pop("inchi", None)
+    row.pop("inchikey", None)
+    if r.mol is not None:
+        try:
+            row["elemental_analysis"] = ms.ea_text(r.mol)
+            row["ms"] = ms.ms_text(r.mol)
+        except Exception as e:
+            row["elemental_analysis"] = row["ms"] = f"計算できませんでした: {e}"
+    return row
+
+
 def write_results(results: list[core.Result], dst: Path):
     suf = dst.suffix.lower()
-    rows = [r.row() for r in results]
+    rows = [_with_ms(r) for r in results]
     if suf == ".xlsx":
         from openpyxl import Workbook
         from openpyxl.styles import Font, PatternFill
@@ -68,13 +83,13 @@ def write_results(results: list[core.Result], dst: Path):
         ws.append(FIELDS)
         for c in ws[1]:
             c.font = Font(bold=True)
-        colors = {"一致": "E2F0D9", "立体以外一致": "FFF2CC", "未検証": "F8CBAD", "推定": "FFF2CC", "失敗": "F8CBAD"}
+        colors = {"一致": "E2F0D9", "立体以外一致": "FFF2CC", "互変異性体違い": "FFF2CC", "未検証": "F8CBAD", "推定": "FFF2CC", "失敗": "F8CBAD"}
         for row in rows:
             ws.append([row.get(f, "") for f in FIELDS])
             fill = colors.get(row.get("check", ""))
             if fill:
                 ws.cell(ws.max_row, FIELDS.index("check") + 1).fill = PatternFill("solid", fgColor=fill)
-        for col, w in zip("ABCDEFGHIJKL", (28, 10, 50, 10, 40, 40, 30, 14, 10, 12, 20, 40)):
+        for col, w in zip("ABCDEFGHIJKLMN", (28, 10, 50, 10, 8, 14, 40, 14, 10, 12, 34, 60, 20, 40)):
             ws.column_dimensions[col].width = w
         ws.freeze_panes = "A2"
         wb.save(dst)
@@ -125,10 +140,12 @@ def show(r: core.Result):
     print(f"IUPAC 名 : {r.name}")
     if r.aliases:
         print(f"別名     : {' / '.join(r.aliases)}")
-    for k, label in (("smiles", "SMILES"), ("inchi", "InChI"), ("inchikey", "InChIKey")):
-        print(f"{label:9s}: {r.info.get(k, '')}")
+    print(f"SMILES   : {r.info.get('smiles', '')}")
     if r.info.get("formula"):
         print(f"分子式   : {r.info['formula']}  MW {r.info['mw']}  精密質量 {r.info['exact_mass']}")
+    if r.mol is not None:
+        print(f"元素分析 : {ms.ea_text(r.mol)}  (計算値)")
+        print(f"MS       : {ms.ms_text(r.mol, top=6)}  (計算値、m/z(相対強度%))")
     print(f"判定     : {r.level}  {r.message}")
     for name, lv in r.candidates[1:6]:
         print(f"  候補: {name}  [{lv}]")

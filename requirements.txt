@@ -1,7 +1,10 @@
 rdkit>=2024.3
+numpy
 torch>=2.0
 transformers==4.48.2
 safetensors
 huggingface_hub
 openpyxl
+scikit-learn
+joblib
 pytest

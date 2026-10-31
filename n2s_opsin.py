@@ -31,7 +31,7 @@ class OpsinResult:
 class _Server:
     def __init__(self):
         if OPSIN_JAR is None or not (LIB / "OpsinServer.class").exists():
-            raise RuntimeError("lib/ に OPSIN の jar か OpsinServer.class がありません。setup_assets.py を実行してください。")
+            raise RuntimeError("lib/ に OPSIN の jar か OpsinServer.class がありません。")
         java = shutil.which("java")
         if java is None:
             raise RuntimeError("java が見つかりません(OPSIN に必要)。")
@@ -92,10 +92,6 @@ def parse(names: list[str], *, lenient: bool = False, acids: bool = False, cml: 
         return []
     flags = ("l" if lenient else "") + ("a" if acids else "") + ("c" if cml else "")
     return server().ask(names, flags)
-
-
-def to_smiles(names: list[str]) -> list[str]:
-    return [r.smiles if r.ok else "" for r in parse(names)]
 
 
 # ---------------------------------------------------------------- CML -> RDKit(位置番号つき)

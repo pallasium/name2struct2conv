@@ -122,3 +122,26 @@ def test_batch(tmp_path):
         assert dst.exists() and dst.stat().st_size > 0
     rows = list(csv.DictReader(open(tmp_path / "out.csv", encoding="utf-8-sig")))
     assert [r["check"] for r in rows][:2] == ["一致", "辞書"]
+
+
+def test_confidence_and_rules_reported():
+    r = core.smiles_to_name("CCOC(C)=O")          # エステルは部品から組み立てる
+    assert r.name == "ethyl acetate" and r.level == "一致"
+    assert r.confidence == "rule" and "assemble" in r.rules
+    row = r.row()
+    assert row["pin"] == "rule" and "assemble" in row["rules"]
+
+
+def test_confidence_model_name_kept():
+    r = core.smiles_to_name("CCO")                # 辞書・単純なもの: 書き換え不要
+    assert r.level in ("一致", "辞書", "OPSIN") and r.confidence in ("model", "rule", "")
+
+
+def test_convert_without_naming_skips_structure_to_name():
+    import time
+    import n2s_core as core
+    t0 = time.perf_counter()
+    r = core.convert("CC(=O)Oc1ccccc1C(=O)O", "auto", name_it=False)
+    assert r.ok and r.mol is not None and r.name == "" and r.level == "名前なし" and r.info["formula"] == "C9H8O4"
+    assert time.perf_counter() - t0 < 1.0
+    assert core.convert("2-acetyloxybenzoic acid", "auto", name_it=False).name      # 名前 → 構造は影響を受けない
