@@ -84,9 +84,11 @@ def hill_order(counts: dict[str, int]) -> list[str]:
 
 
 def elemental_analysis(mol: Chem.Mol) -> tuple[float, list[tuple[str, int, float]]]:
-    """-> (分子量, [(元素, 個数, 質量%)])。塩・混合物は最大の成分。"""
-    counts = composition(mol, whole=True)   # 元素分析は試料全体(塩は全成分)
+    """-> (分子量, [(元素, 個数, 質量%)])。塩・混合物は全成分の合算(試料全体の組成)。"""
+    counts = composition(mol, whole=True)
     mw = sum(_PT.GetAtomicWeight(s) * n for s, n in counts.items())
+    if mw <= 0:   # 原子が無い・ダミー原子(*)だけ
+        return 0.0, []
     return mw, [(s, counts[s], 100.0 * _PT.GetAtomicWeight(s) * counts[s] / mw) for s in hill_order(counts)]
 
 
@@ -173,6 +175,8 @@ def spectrum(mol: Chem.Mol, ion: str = "M+", min_rel: float = 0.1) -> list[tuple
 
 def ea_text(mol: Chem.Mol) -> str:
     mw, rows = elemental_analysis(mol)
+    if not rows:
+        return ""
     return "  ".join(f"{s} {p:.2f}" for s, _, p in rows) + " (%)"
 
 

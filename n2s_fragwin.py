@@ -228,5 +228,6 @@ class FragmentWindow(tk.Toplevel):
                 msdb.build(progress=lambda n: self.after(0, lambda: self.db_note.config(text=f"索引を作っています… {n} 件")))
                 self.after(0, self.load_records)
             except Exception as e:
-                self.after(0, lambda: (self.db_note.config(text=f"失敗しました: {e}"), self.db_btn.state(["!disabled"])))
+                msg = f"失敗しました: {e}"   # e は except を抜けると消えるので、文字列にしてから渡す
+                self.after(0, lambda: (self.db_note.config(text=msg), self.db_btn.state(["!disabled"])))
         threading.Thread(target=work, daemon=True).start()

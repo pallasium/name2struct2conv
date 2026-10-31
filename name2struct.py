@@ -86,6 +86,9 @@ def write_results(results: list[core.Result], dst: Path):
         colors = {"一致": "E2F0D9", "立体以外一致": "FFF2CC", "互変異性体違い": "FFF2CC", "未検証": "F8CBAD", "推定": "FFF2CC", "失敗": "F8CBAD"}
         for row in rows:
             ws.append([row.get(f, "") for f in FIELDS])
+            for c in ws[ws.max_row]:
+                if c.data_type == "f":   # 入力が "=..." でも数式として実行させない(文字列のまま書く)
+                    c.data_type = "s"
             fill = colors.get(row.get("check", ""))
             if fill:
                 ws.cell(ws.max_row, FIELDS.index("check") + 1).fill = PatternFill("solid", fgColor=fill)
@@ -165,7 +168,14 @@ def main():
     ap.add_argument("--rename", action="store_true", help="名前 → 構造のあと、構造から検証済みの名前を付け直す")
     ap.add_argument("--json", action="store_true", help="結果を JSON で出す")
     a = ap.parse_args()
+    try:
+        _run(a)
+    except RuntimeError as e:   # OPSIN・Java・モデルが無いなど。トレースバックではなく理由だけを出す
+        print(f"エラー: {e}", file=sys.stderr)
+        sys.exit(2)
 
+
+def _run(a):
     if a.file:
         run_batch(a.file, a.out or a.file.with_name(a.file.stem + "_out.csv"), a.to)
         return

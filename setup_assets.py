@@ -62,7 +62,7 @@ def build_server():
     javac = shutil.which("javac")
     if javac is None:
         sys.exit("lib/OpsinServer.class が無く、javac(JDK)も見つかりません。")
-    subprocess.run([javac, "--release", "11", "-encoding", "UTF-8", "-cp", str(LIB / OPSIN_JAR),
+    subprocess.run([javac, "--release", "11", "-encoding", "UTF-8", "-proc:none", "-cp", str(LIB / OPSIN_JAR),
                     "-d", str(LIB), str(LIB / "OpsinServer.java")], check=True)
     print("ok", LIB / "OpsinServer.class")
 

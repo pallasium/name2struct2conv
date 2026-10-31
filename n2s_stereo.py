@@ -29,7 +29,7 @@ def strip(name: str) -> str:
 
 def inchikey(mol) -> str:
     try:
-        return Chem.MolToInchiKey(mol) or "" if mol is not None else ""
+        return (Chem.MolToInchiKey(mol) or "") if mol is not None else ""
     except Exception:
         return ""
 

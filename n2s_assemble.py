@@ -24,8 +24,7 @@ def _frags(mol: Chem.Mol, break_bond: tuple[int, int], cap: tuple[int, int]):
     rw = Chem.RWMol(mol)
     a, b = break_bond
     rw.RemoveBond(a, b)
-    o = rw.AddAtom(Chem.Atom(8))
-    rw.AddBond(cap[1], o, Chem.BondType.SINGLE)
+    rw.AddBond(cap[1], rw.AddAtom(Chem.Atom(8)), Chem.BondType.SINGLE)
     for at in rw.GetAtoms():
         at.SetNoImplicit(False)
         at.SetNumExplicitHs(0)
@@ -92,7 +91,7 @@ def ester_names(mol: Chem.Mol, name_fn) -> list[str]:
         return []
     ates = [a for a in (acid_to_ate(n) for n in name_fn(acid)[:3]) if a]
     yls = [y for y in (alcohol_to_yl(n) for n in name_fn(alc)[:3]) if y]
-    return [f"{y} {a}" if re.fullmatch(r"[a-z]+", y) else f"{y} {a}" for y, a in product(yls, ates)]
+    return [f"{y} {a}" for y, a in product(yls, ates)]
 
 
 # ---------------------------------------------------------------- アミド・尿素
@@ -146,7 +145,7 @@ def amide_names(mol: Chem.Mol, name_fn) -> list[str]:
     if mol.GetAtomWithIdx(n).GetIsAromatic() or mol.GetAtomWithIdx(c_acyl).GetIsAromatic():
         return []
     subs = _n_substituents(mol, n, {c_acyl})
-    if not subs or len(subs) > 2 or any(mol.GetAtomWithIdx(r).GetIsAromatic() and False for r in subs):
+    if not subs or len(subs) > 2:
         return []
     try:
         frags, idxs = _cap(mol, (c_acyl, n), c_acyl)
@@ -172,8 +171,7 @@ def urea_names(mol: Chem.Mol, name_fn) -> list[str]:
     ms = mol.GetSubstructMatches(_UREA)
     if len(ms) != 1 or Chem.GetFormalCharge(mol) != 0 or len(Chem.GetMolFrags(mol)) != 1:
         return []
-    n1, c, n2 = ms[0][0], ms[0][1], ms[0][3] if len(ms[0]) > 3 else ms[0][2]
-    n1, c, o, n2 = ms[0][0], ms[0][1], ms[0][2], ms[0][3]
+    n1, c, _o, n2 = ms[0]
     pieces = []   # (N の記号, 置換基の yl 候補)
     try:
         for tag, n in (("N", n1), ("N'", n2)):
@@ -220,7 +218,6 @@ def phosphorus_names(mol: Chem.Mol, name_fn) -> list[str]:
     s = (x_sym == "S") + sum(g[0] == "S" for g in groups)
     thio = {0: "", 1: "othio", 2: "odithio", 3: "otrithio", 4: "otetrathio"}[s]
     # 各 R を R-OH にして名付ける
-    rw = Chem.RWMol(mol)
     names_per = []
     cache: dict[str, list[str]] = {}
     for loc, a, r in groups:
@@ -277,7 +274,6 @@ def _compose(items, thio) -> str:
         wrap = (not simple) and bool(thio or located or n > 1)   # 位置記号つきの語・位置番号を持つ置換基の倍数は括弧に入れる
         body = f"({y})" if wrap else y
         words.append((f"{','.join(locs)}-" if thio else "") + f"{pre}{body}")
-    core = ("phosphon" if direct else "phosph") + (("or" + thio.lstrip("o") if False else "") if False else "")
     core = ("phosphon" if direct else "phosphor" if thio else "phosph") + (thio + "ate" if thio else "ate")
     if direct:
         core = (direct[0] if pin._is_simple(direct[0]) else f"({direct[0]})") + core

@@ -63,15 +63,28 @@ class _Server:
             w = threading.Thread(target=write, daemon=True)
             w.start()
             out = []
-            for n in clean:
-                line = self.proc.stdout.readline()
-                if not line:
-                    raise RuntimeError("OPSIN が止まりました。")
-                p = line.rstrip("\r\n").split("\t")
-                p += [""] * (5 - len(p))
-                out.append(OpsinResult(n, p[0] in ("SUCCESS", "WARNING") and bool(p[1]), p[1], p[2], p[3], p[4]))
+            try:
+                for n in clean:
+                    line = self.proc.stdout.readline()
+                    if not line:
+                        raise RuntimeError("OPSIN が止まりました。")
+                    p = line.rstrip("\r\n").split("\t")
+                    p += [""] * (5 - len(p))
+                    out.append(OpsinResult(n, p[0] in ("SUCCESS", "WARNING") and bool(p[1]), p[1], p[2], p[3], p[4]))
+            except BaseException:
+                # 途中で抜けると、読み残した返事が次の問い合わせの答えとして読まれてしまう(行がずれる)。
+                # プロセスを止めて、次の呼び出しで起動し直させる。
+                self.close()
+                raise
             w.join()
             return out
+
+    def close(self):
+        try:
+            self.proc.kill()
+            self.proc.wait(timeout=5)
+        except Exception:
+            pass
 
 
 _server: _Server | None = None

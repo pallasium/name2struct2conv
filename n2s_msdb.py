@@ -91,6 +91,20 @@ def build(msp: Path = MSP, db: Path = DB, progress=None) -> int:
     if tmp.exists():
         tmp.unlink()
     con = sqlite3.connect(tmp)
+    try:
+        n = _fill(con, msp, progress)
+        con.execute("CREATE INDEX idx_ik14 ON spectra(ik14)")
+        con.commit()
+    except BaseException:
+        con.close()
+        tmp.unlink(missing_ok=True)
+        raise
+    con.close()
+    tmp.replace(db)
+    return n
+
+
+def _fill(con, msp: Path, progress) -> int:
     con.execute("""CREATE TABLE spectra(acc TEXT PRIMARY KEY, name TEXT, ikey TEXT, ik14 TEXT, smiles TEXT, ptype TEXT,
                    pmz REAL, mode TEXT, ce TEXT, itype TEXT, instrument TEXT, stype TEXT, formula TEXT, decimals INTEGER, peaks TEXT)""")
     n = 0
@@ -131,12 +145,6 @@ def build(msp: Path = MSP, db: Path = DB, progress=None) -> int:
                 progress(n)
     if rows:
         con.executemany("INSERT OR REPLACE INTO spectra VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows)
-    con.execute("CREATE INDEX idx_ik14 ON spectra(ik14)")
-    con.commit()
-    con.close()
-    if db.exists():
-        db.unlink()
-    tmp.rename(db)
     return n
 
 
@@ -147,7 +155,14 @@ def download(dst: Path = MSP, progress=None) -> Path:
     def hook(blocks, size, total):
         if progress and total > 0:
             progress(min(blocks * size / total, 1.0))
-    urllib.request.urlretrieve(URL, dst, hook)
+    # 途中で切れたファイルを完成品と取り違えないように(MSP.exists() で判定している)、別名で取ってから置き換える
+    tmp = dst.with_name(dst.name + ".part")
+    try:
+        urllib.request.urlretrieve(URL, tmp, hook)
+        tmp.replace(dst)
+    finally:
+        if tmp.exists():
+            tmp.unlink()
     return dst
 
 

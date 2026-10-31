@@ -49,8 +49,9 @@ public class OpsinServer {
                     }
                 }
                 msg = r.getMessage() == null ? "" : r.getMessage();
-            } catch (Exception e) {
+            } catch (Throwable e) {   // StackOverflowError など Error も受ける(サーバーごと落とさない)
                 status = "FAILURE";
+                smi = ""; warn = ""; cml = "";
                 msg = e.toString();
             }
             out.println(status + "\t" + clean(smi) + "\t" + clean(warn) + "\t" + clean(msg) + "\t" + clean(cml));

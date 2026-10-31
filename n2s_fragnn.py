@@ -253,7 +253,7 @@ def load_trained(group: str, device: str | None = None, path: Path | None = None
     if not path.exists():
         return None
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-    d = torch.load(path, map_location=device)
+    d = torch.load(path, map_location=device, weights_only=True)   # pickle の任意コードを実行しない(中身はテンソルと数値・文字列だけ)
     net = FragNet(d["nk"], d["hand_dim"], hidden=d.get("hidden", 128)).to(device)
     net.load_state_dict(d["state"])
     return Trained(net, d["mu"].to(device), d["sd"].to(device), d["mode"], device)

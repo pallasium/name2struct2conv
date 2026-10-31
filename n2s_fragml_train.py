@@ -108,7 +108,6 @@ def predict_peaks(model, mol: Chem.Mol, mode: str, top: int = TOPN, with_info: b
     ks = fm.KS[mode]
     feats = np.array([fm.frag_features(M, f, tc, tm, M.n, glob) for f in frs], dtype=np.float32)
     prec = tm + db_proton(mode) if mode != "ei" else tm - fm.E
-    rows, info = [], []
     X = np.vstack([np.hstack([np.full((len(frs), 1), k, dtype=np.float32), feats]) for k in ks])
     pred = np.clip(model.predict(X), 0, None) ** 2
     mz = np.concatenate([[fm.ion_mz(f.mass, k, mode) for f in frs] for k in ks])

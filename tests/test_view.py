@@ -3,9 +3,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import pytest
 from rdkit import Chem
 
-import n2s_view as v
+pytest.importorskip("tkinter")   # tkinter の無い Python(Linux の最小構成など)では飛ばす
+import n2s_view as v  # noqa: E402
 
 
 def test_render_png_and_highlight():

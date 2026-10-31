@@ -37,7 +37,7 @@ def _h(ik14: str) -> int:
 
 def load_compounds(per_group: int, side: str, seed: int = 0):
     """-> {群: [(ik14, mol, [Record, ...])]}。side = 'train' | 'test'。"""
-    con = db.sqlite3.connect(db.DB)
+    con = sqlite3.connect(db.DB)
     out = {}
     for g, ion in GROUPS.items():
         if g == "EI":

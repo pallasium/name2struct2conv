@@ -89,7 +89,7 @@ def fixedh_key(mol) -> str:
         return ""
     try:
         inchi = Chem.MolToInchi(mol, options="/FixedH")
-        return Chem.InchiToInchiKey(inchi) or "" if inchi else ""
+        return (Chem.InchiToInchiKey(inchi) or "") if inchi else ""
     except Exception:
         return ""
 
@@ -244,18 +244,21 @@ class Dictionary:
 
 
 _dict: Dictionary | None = None
+_dict_lock = threading.Lock()
 
 
 def dictionary() -> Dictionary:
     global _dict
-    if _dict is None:
-        _dict = Dictionary()
-    return _dict
+    with _dict_lock:   # GUI の先読みと変換のスレッドが同時に作らないように
+        if _dict is None:
+            _dict = Dictionary()
+        return _dict
 
 
 def reload_dictionary():
     global _dict
-    _dict = None
+    with _dict_lock:
+        _dict = None
 
 
 # ================================================================ 翻訳モデル
@@ -296,8 +299,9 @@ class _Translator:
         else:
             self.device = torch.device("cpu")
             torch.set_num_threads(os.cpu_count() or 1)
-        if os.environ.get("N2S_THREADS"):   # 評価を並列で回すとき、プロセスごとのスレッド数を絞る(run_eval_par.py)
-            torch.set_num_threads(int(os.environ["N2S_THREADS"]))
+        threads = os.environ.get("N2S_THREADS", "")   # 評価を並列で回すとき、プロセスごとのスレッド数を絞る
+        if threads.isdigit() and int(threads) > 0:
+            torch.set_num_threads(int(threads))
         self.model = model.eval().to(self.device)
         self.enc_vocab = enc_vocab
         self.src_tok = PreTrainedTokenizerFast.from_pretrained(MODELS / src)
@@ -338,7 +342,7 @@ def translator(name: str) -> _Translator:
         if name not in _translators:
             d = MODELS / name
             if not d.exists():
-                raise RuntimeError(f"モデル {d} がありません。setup_models.py を実行してください。")
+                raise RuntimeError(f"モデル {d} がありません。python setup_assets.py を実行してください。")
             _translators[name] = _Translator(d, *_TOKENIZERS[name])
         return _translators[name]
 
@@ -449,18 +453,41 @@ def name_to_struct(text: str, ml_fallback: bool = True) -> Result:
     return res
 
 
-_iupac_tok = None
+_iupac_tok = None   # None = まだ読んでいない / False = 読めなかった(モデル未導入など)
 
 
 def _rarity(name: str) -> float:
-    """名前のありふれなさ。IUPAC 語彙の番号(よく出る語ほど小さい)の対数の平均。"""
+    """名前のありふれなさ。IUPAC 語彙の番号(よく出る語ほど小さい)の対数の平均。
+    語彙(モデルの tokenizer)が無いときは 0(順位付けに使わない)。綴りの修正自体は機械学習なしで動く。"""
     global _iupac_tok
     import math
     if _iupac_tok is None:
-        from transformers import PreTrainedTokenizerFast
-        _iupac_tok = PreTrainedTokenizerFast.from_pretrained(MODELS / "IUPAC-FAST-TOKENIZER")
+        try:
+            from transformers import PreTrainedTokenizerFast
+            _iupac_tok = PreTrainedTokenizerFast.from_pretrained(MODELS / "IUPAC-FAST-TOKENIZER")
+        except Exception:
+            _iupac_tok = False
+    if _iupac_tok is False:
+        return _rarity_simple(name)
     ids = _iupac_tok(name, add_special_tokens=False)["input_ids"]
     return sum(math.log(i + 2) for i in ids) / max(len(ids), 1)
+
+
+# 語彙が無いときの代わり: IUPAC 名によく出る語(長いものから当てる)
+_COMMON = re.compile(
+    r"methyl|ethyl|propyl|butyl|pentyl|hexyl|phenyl|benzyl|benzo|benz|hydroxy|amino|imino|nitro|cyano|chloro|fluoro|bromo|iodo"
+    r"|methoxy|ethoxy|carboxy|carbonyl|carbox|amide|amine|acid|oxo|oxy|acet|form|meth|eth|prop|but|pent|hex|hept|oct|non|dec"
+    r"|cyclo|pyridin|pyrrol|furan|thiophen|indol|quinolin|azol|azin|imidazol|oxazol|thiazol|naphthalen|sulfon|sulfan|phosph"
+    r"|di|tri|tetra|yl|ol|one|al|ane|ene|yne|ate|ic|an|en|yn")
+
+
+def _rarity_simple(name: str) -> float:
+    """名前のうち、よく出る語で覆えない文字の割合(0 = 全部ありふれた語)。"""
+    letters = re.sub(r"[^a-z]", "", name.lower())
+    if not letters:
+        return 1.0
+    covered = sum(len(m) for m in _COMMON.findall(letters))
+    return 1.0 - covered / len(letters)
 
 
 def _similarity(mol, others) -> float:

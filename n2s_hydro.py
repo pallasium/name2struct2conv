@@ -150,7 +150,6 @@ def hydro_names(name: str, mol: Chem.Mol, parent_ok=None, _nested: bool = True) 
         if not sp:
             continue
         stereo, segs, parent = sp
-        had = any(re.search(r"hydro$", b) for _, b in segs) or bool(re.match(r"\d*H-", parent))
         segs = [(l, b) for l, b in segs if not re.search(r"hydro$", b)]   # 既にあるものは構造から作り直す
         parent = re.sub(r"^\d*H-", "", parent)
         parent = re.sub(r"\(\d+H\)", "", parent)

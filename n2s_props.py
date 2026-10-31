@@ -125,7 +125,9 @@ def joback_groups(mol: Chem.Mol) -> dict[str, int] | None:
         elif sym == "S":
             if a.GetFormalCharge() or any(t != S for t, _ in bs):
                 return None
-            add("-SH" if h == 1 else ("r-S-" if ring else "-S-")) if len(bs) <= 2 else None
+            if len(bs) > 2:   # Joback に無い基(数えずに飛ばすと推算値が黙って狂う)
+                return None
+            add("-SH" if h == 1 else ("r-S-" if ring else "-S-"))
         else:
             return None
     return out
@@ -173,6 +175,8 @@ ROWS = [("Tb", "Boiling Point", "K", False), ("Tm", "Melting Point", "K", False)
 def properties(mol: Chem.Mol) -> list[tuple[str, str, str, str, bool]]:
     """-> [(キー, 表示名, 値の文字列, 単位, 近似か)]。計算できない項目は値 "N/A"。複数成分は最大のものを使う。"""
     frags = Chem.GetMolFrags(mol, asMols=True)
+    if not frags:
+        return [(key, label, "N/A", "", False) for key, label, _, _ in ROWS]
     m = max(frags, key=lambda f: f.GetNumHeavyAtoms())
     jb = joback(m) or {}
     v: dict[str, float | None] = dict(jb)

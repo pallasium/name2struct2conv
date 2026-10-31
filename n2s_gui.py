@@ -219,11 +219,13 @@ class App:
     def run(self):
         text = self.entry.get("1.0", "end").strip()
         if text:
-            self._work(self._convert, text, self.to.get())
+            # Tk の変数は別スレッドから読まない(tkinter はスレッド安全でない)。ここで値にしてから渡す
+            self._work(self._convert, text, self.to.get(), self.calc_name.get(), self.opt_rename.get())
 
-    def _convert(self, text: str, to: str) -> core.Result:
-        r = core.convert(text, to, self.calc_name.get())
-        if self.opt_rename.get() and r.direction == "名前→構造" and r.mol is not None:   # --rename: 構造から検証済みの名前も付け直す
+    @staticmethod
+    def _convert(text: str, to: str, name_it: bool, rename: bool) -> core.Result:
+        r = core.convert(text, to, name_it)
+        if rename and r.direction == "名前→構造" and r.mol is not None:   # --rename: 構造から検証済みの名前も付け直す
             r2 = core.smiles_to_name(r.mol)
             if r2.ok:
                 r.message += f"  構造から付けた名前: {r2.name}({r2.level})"
@@ -322,8 +324,13 @@ class App:
                         self.status.config(text="完了")
                     elif kind == "batch":
                         self.status.config(text=f"保存しました: {data}")
-                        if messagebox.askyesno("一括変換", f"保存しました:\n{data}\n\n開きますか?"):
-                            os.startfile(data) if hasattr(os, "startfile") else None
+                        if hasattr(os, "startfile") and messagebox.askyesno("一括変換", f"保存しました:\n{data}\n\n開きますか?"):
+                            try:
+                                os.startfile(data)
+                            except OSError as e:
+                                messagebox.showerror("開けません", str(e))
+                        elif not hasattr(os, "startfile"):
+                            messagebox.showinfo("一括変換", f"保存しました:\n{data}")
                     elif kind == "error":
                         self.status.config(text="エラー")
                         messagebox.showerror("エラー", data)
@@ -418,7 +425,11 @@ class App:
             return
         p = filedialog.asksaveasfilename(defaultextension=ext, filetypes=[(ext[1:].upper(), "*" + ext)])
         if p:
-            writer(Path(p), r)
+            try:
+                writer(Path(p), r)
+            except Exception as e:   # 書き込めない場所など。pythonw ではコンソールに出ないので必ず知らせる
+                messagebox.showerror("保存できません", f"{p}\n{e}")
+                return
             self.status.config(text=f"保存: {p}")
 
     def save_mol(self):
@@ -472,10 +483,11 @@ class App:
             return
         self.busy = True
         self.btn.state(["disabled"])
+        to = self.to.get()   # Tk の変数は別スレッドから読まない
 
         def target():
             try:
-                out = run_batch(src, Path(dst), self.to.get(),
+                out = run_batch(src, Path(dst), to,
                                 progress=lambda i, n, m: self.q.put(("progress", (i, n, m))))
                 self.q.put(("batch", str(out)))
             except Exception as e:
@@ -484,8 +496,12 @@ class App:
 
     def open_user_dict(self):
         p = core.HERE / "user_dict.tsv"
-        if not p.exists():
-            p.write_text(USER_DICT_TEMPLATE, encoding="utf-8")
+        try:
+            if not p.exists():
+                p.write_text(USER_DICT_TEMPLATE, encoding="utf-8")
+        except OSError as e:
+            messagebox.showerror("利用者辞書", f"作れません: {p}\n{e}")
+            return
         try:
             subprocess.Popen(["notepad.exe", str(p)])
         except Exception:
